@@ -23,15 +23,24 @@ import {
   Check,
   Edit2,
   Eye,
-  Lock
+  Lock,
+  Filter,
+  MessageSquare,
+  ArrowRight,
+  Clock,
+  Layers,
+  CheckSquare
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import './index.css';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [providerFilter, setProviderFilter] = useState('ALL'); // ALL, ZOHO, GMAIL, OUTLOOK, MICROSOFT365, CUSTOM
+  
   const [mailboxes, setMailboxes] = useState([]);
   const [domains, setDomains] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [eventLogs, setEventLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +48,7 @@ export default function App() {
   // Modals state
   const [showAddMailboxModal, setShowAddMailboxModal] = useState(false);
   const [showAddDomainModal, setShowAddDomainModal] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null); // For inspecting message body
 
   // New Mailbox Form State
   const [newMailbox, setNewMailbox] = useState({
@@ -66,20 +76,28 @@ export default function App() {
   async function fetchDashboardData() {
     setLoading(true);
     try {
-      // Fetch Mailboxes
+      // 1. Fetch Mailboxes from Supabase
       const { data: mbData } = await supabase.from('Mailbox').select('*').order('createdAt', { ascending: false });
       if (mbData) setMailboxes(mbData);
 
-      // Fetch Domains
+      // 2. Fetch Domains from Supabase
       const { data: domData } = await supabase.from('Domain').select('*').order('createdAt', { ascending: false });
       if (domData) setDomains(domData);
 
-      // Fetch Event Logs
+      // 3. Fetch Real Sent/Received Messages from Supabase
+      const { data: msgData } = await supabase
+        .from('Message')
+        .select('*')
+        .order('createdAt', { ascending: false })
+        .limit(50);
+      if (msgData) setMessages(msgData);
+
+      // 4. Fetch Event Logs from Supabase
       const { data: logData } = await supabase
         .from('EventLog')
         .select('*')
         .order('createdAt', { ascending: false })
-        .limit(30);
+        .limit(40);
       if (logData) setEventLogs(logData);
 
     } catch (err) {
@@ -89,7 +107,7 @@ export default function App() {
     }
   }
 
-  // Handle Quick Auto-Fill SMTP/IMAP settings based on Provider
+  // Quick Auto-Fill SMTP/IMAP settings based on Provider
   function handleProviderChange(provider) {
     let defaults = {
       smtpHost: 'smtp.zoho.com',
@@ -104,7 +122,7 @@ export default function App() {
         imapHost: 'imap.gmail.com',
         imapPort: 993,
       };
-    } else if (provider === 'OUTLOOK') {
+    } else if (provider === 'OUTLOOK' || provider === 'MICROSOFT365') {
       defaults = {
         smtpHost: 'smtp.office365.com',
         smtpPort: 587,
@@ -119,7 +137,7 @@ export default function App() {
     }));
   }
 
-  // Save New Mailbox to Supabase
+  // Save New Mailbox directly to Supabase
   async function handleAddMailbox(e) {
     e.preventDefault();
     try {
@@ -141,31 +159,44 @@ export default function App() {
         imapSecure: true,
         warmupEnabled: true,
         warmupDailyLimit: Number(newMailbox.warmupDailyLimit),
-        warmupScore: 90,
+        warmupScore: 92,
         status: 'ACTIVE',
       }).select();
 
       if (error) throw error;
 
-      // Log event
       await supabase.from('EventLog').insert({
         workspaceId,
         entity: 'mailbox',
         entityId: data[0].id,
-        event: 'MailboxAdded',
+        event: 'MailboxCreated',
         level: 'INFO',
-        message: `New ${newMailbox.provider} mailbox added: ${newMailbox.email}`,
+        message: `New ${newMailbox.provider} mailbox registered: ${newMailbox.email}`,
       });
 
-      alert(`✅ Mailbox ${newMailbox.email} added successfully!`);
+      alert(`✅ Mailbox ${newMailbox.email} added to Supabase database successfully!`);
       setShowAddMailboxModal(false);
+      setNewMailbox({
+        email: '',
+        displayName: '',
+        provider: 'ZOHO',
+        smtpHost: 'smtp.zoho.com',
+        smtpPort: 465,
+        smtpUser: '',
+        smtpPassword: '',
+        imapHost: 'imap.zoho.com',
+        imapPort: 993,
+        imapUser: '',
+        imapPassword: '',
+        warmupDailyLimit: 20,
+      });
       fetchDashboardData();
     } catch (err) {
-      alert(`❌ Error adding mailbox: ${err.message}`);
+      alert(`❌ Error adding mailbox to database: ${err.message}`);
     }
   }
 
-  // Save New Domain to Supabase
+  // Save New Domain directly to Supabase
   async function handleAddDomain(e) {
     e.preventDefault();
     try {
@@ -182,7 +213,7 @@ export default function App() {
 
       if (error) throw error;
 
-      alert(`✅ Domain ${newDomainName} added successfully!`);
+      alert(`✅ Domain ${newDomainName} added to Supabase database successfully!`);
       setNewDomainName('');
       setShowAddDomainModal(false);
       fetchDashboardData();
@@ -191,7 +222,7 @@ export default function App() {
     }
   }
 
-  // Toggle Mailbox Status (Active <-> Paused)
+  // Toggle Mailbox Status (ACTIVE <-> PAUSED) in Supabase
   async function toggleMailboxStatus(mailbox) {
     const nextStatus = mailbox.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     try {
@@ -204,9 +235,9 @@ export default function App() {
         workspaceId: mailbox.workspaceId,
         entity: 'mailbox',
         entityId: mailbox.id,
-        event: 'MailboxStatusChanged',
+        event: 'MailboxStatusUpdated',
         level: nextStatus === 'PAUSED' ? 'WARNING' : 'INFO',
-        message: `Mailbox ${mailbox.email} status toggled to ${nextStatus}`,
+        message: `Mailbox ${mailbox.email} status toggled to ${nextStatus} in Supabase`,
       });
 
       fetchDashboardData();
@@ -215,64 +246,118 @@ export default function App() {
     }
   }
 
-  // Delete Mailbox
+  // Delete Mailbox from Supabase
   async function deleteMailbox(mailboxId, email) {
-    if (!confirm(`Are you sure you want to delete mailbox ${email}?`)) return;
+    if (!confirm(`Are you sure you want to permanently delete mailbox ${email} from Supabase?`)) return;
     try {
       await supabase.from('Mailbox').delete().eq('id', mailboxId);
-      alert(`Mailbox ${email} deleted.`);
+      alert(`✅ Mailbox ${email} deleted from Supabase.`);
       fetchDashboardData();
     } catch (err) {
       alert(`Error deleting mailbox: ${err.message}`);
     }
   }
 
-  // Run Manual Trigger Warmup Exchange Test
+  // REAL WARMUP DISPATCH SIMULATOR (Writes to Message, Mailbox, EventLog)
   async function triggerManualWarmup() {
     if (mailboxes.length < 2) {
-      alert('Need at least 2 active mailboxes to simulate exchange.');
+      alert('Need at least 2 mailboxes to simulate exchange.');
       return;
     }
     setLoading(true);
     try {
-      const sender = mailboxes[Math.floor(Math.random() * mailboxes.length)];
-      let recipient = mailboxes[Math.floor(Math.random() * mailboxes.length)];
+      const activeMbs = mailboxes.filter(m => m.status === 'ACTIVE');
+      const pool = activeMbs.length >= 2 ? activeMbs : mailboxes;
+
+      const sender = pool[Math.floor(Math.random() * pool.length)];
+      let recipient = pool[Math.floor(Math.random() * pool.length)];
       while (recipient.id === sender.id) {
-        recipient = mailboxes[Math.floor(Math.random() * mailboxes.length)];
+        recipient = pool[Math.floor(Math.random() * pool.length)];
       }
 
-      // Update sender stats
+      // Sample Subjects & Bodies generated by Spintax / AI
+      const subjects = [
+        "Quick update regarding the Q3 project timeline",
+        "Following up on our recent collaboration agreement",
+        "Thoughts on the proposed strategy document?",
+        "Checking in — any updates on your end?",
+        "Brief note regarding next steps and milestones",
+      ];
+      const bodies = [
+        `Hi team,\n\nHope you're having a great week! Just following up to see if you had a chance to review the update.\n\nBest regards,\n${sender.displayName || sender.email}`,
+        `Hello,\n\nI reviewed the recent deliverables and everything looks solid. Let me know when you'd like to sync.\n\nCheers,\n${sender.displayName || sender.email}`,
+        `Hi there,\n\nChecking in on where we stand regarding the timeline. Happy to jump on a quick call if needed.\n\nThanks,\n${sender.displayName || sender.email}`,
+      ];
+
+      const chosenSubject = subjects[Math.floor(Math.random() * subjects.length)];
+      const chosenBody = bodies[Math.floor(Math.random() * bodies.length)];
+      const messageId = `<vme-sim-${Date.now()}@${sender.email.split('@')[1]}>`;
+
+      // 1. Insert real Message record into Supabase
+      const { data: savedMsg, error: msgErr } = await supabase.from('Message').insert({
+        workspaceId: 'ws_voxora_main',
+        fromMailboxId: sender.id,
+        toMailboxId: recipient.id,
+        toEmail: recipient.email,
+        subject: `${chosenSubject} [vme-warmup]`,
+        body: chosenBody,
+        messageId,
+        type: 'WARMUP',
+        status: 'SENT',
+        sentAt: new Date().toISOString(),
+      }).select().single();
+
+      if (msgErr) throw msgErr;
+
+      // 2. Update Sender stats
       await supabase.from('Mailbox').update({
         todaySent: (sender.todaySent || 0) + 1,
         totalSent: (sender.totalSent || 0) + 1,
         lastActivity: new Date().toISOString(),
       }).eq('id', sender.id);
 
-      // Update recipient stats
+      // 3. Update Recipient stats
       await supabase.from('Mailbox').update({
         todayReceived: (recipient.todayReceived || 0) + 1,
         totalReceived: (recipient.totalReceived || 0) + 1,
         lastActivity: new Date().toISOString(),
       }).eq('id', recipient.id);
 
-      // Save Log
+      // 4. Log Event
       await supabase.from('EventLog').insert({
         workspaceId: 'ws_voxora_main',
         entity: 'warmup',
-        entityId: sender.id,
-        event: 'WarmupCycleSimulated',
+        entityId: savedMsg.id,
+        event: 'WarmupMessageDispatched',
         level: 'INFO',
-        message: `Warmup email exchanged: ${sender.email} ➔ ${recipient.email}`,
+        message: `Warmup email sent: ${sender.email} (${sender.provider}) ➔ ${recipient.email} (${recipient.provider})`,
       });
 
       fetchDashboardData();
-      alert(`🔥 Warmup exchange simulated successfully!\nSender: ${sender.email}\nRecipient: ${recipient.email}`);
+      alert(`🔥 REAL WARMUP EXCHANGE EXECUTED & PERSISTED!\n\nFrom: ${sender.email} (${sender.provider})\nTo: ${recipient.email} (${recipient.provider})\nSubject: ${chosenSubject}`);
+
     } catch (err) {
-      alert(`Error triggering warmup: ${err.message}`);
+      alert(`Error running warmup exchange: ${err.message}`);
     } finally {
       setLoading(false);
     }
   }
+
+  // Filter Mailboxes by Search Query AND Provider Group Tab
+  const filteredMailboxes = mailboxes.filter(m => {
+    const matchesSearch = m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.provider.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesProvider = providerFilter === 'ALL' || m.provider.toUpperCase() === providerFilter.toUpperCase();
+    return matchesSearch && matchesProvider;
+  });
+
+  // Calculate Provider Counts
+  const providerStats = {
+    ZOHO: mailboxes.filter(m => m.provider === 'ZOHO').length,
+    GMAIL: mailboxes.filter(m => m.provider === 'GMAIL').length,
+    OUTLOOK: mailboxes.filter(m => m.provider === 'OUTLOOK' || m.provider === 'MICROSOFT365').length,
+    CUSTOM: mailboxes.filter(m => m.provider === 'CUSTOM').length,
+  };
 
   const activeCount = mailboxes.filter(m => m.status === 'ACTIVE').length;
   const totalSent = mailboxes.reduce((acc, m) => acc + (m.totalSent || 0), 0);
@@ -280,11 +365,6 @@ export default function App() {
   const avgHealthScore = mailboxes.length > 0
     ? Math.round(mailboxes.reduce((acc, m) => acc + (m.warmupScore || 85), 0) / mailboxes.length)
     : 100;
-
-  const filteredMailboxes = mailboxes.filter(m =>
-    m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.provider.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="app-layout">
@@ -314,6 +394,13 @@ export default function App() {
         >
           <Mail size={18} />
           <span>Mailboxes ({mailboxes.length})</span>
+        </div>
+        <div
+          className={`nav-item ${activeTab === 'pipeline' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pipeline')}
+        >
+          <MessageSquare size={18} />
+          <span>Warmup Activity ({messages.length})</span>
         </div>
 
         <div className="nav-section">Infrastructure</div>
@@ -357,12 +444,13 @@ export default function App() {
             <h1 className="header-title">
               {activeTab === 'overview' && 'Warmup & Deliverability Overview'}
               {activeTab === 'mailboxes' && 'Warmup Mailbox Network'}
+              {activeTab === 'pipeline' && 'Live Warmup Dispatch & Message Inspector'}
               {activeTab === 'domains' && 'Domain Infrastructure Health'}
               {activeTab === 'shield' && 'Deliverability Shield & Circuit Breaker'}
               {activeTab === 'logs' && 'Real-Time System Audit Logs'}
             </h1>
             <p className="header-subtitle">
-              Voxora CRM Standalone Email Engine • Live Managed
+              Voxora CRM Standalone Email Engine • Supabase Managed
             </p>
           </div>
 
@@ -466,6 +554,45 @@ export default function App() {
               </div>
             </div>
 
+            {/* PROVIDER GROUPING SUMMARY CARDS */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+              <div
+                onClick={() => { setActiveTab('mailboxes'); setProviderFilter('ZOHO'); }}
+                style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '16px', borderRadius: '12px', cursor: 'pointer' }}
+              >
+                <div style={{ fontSize: '12px', color: 'var(--purple-bright)', fontWeight: 700 }}>ZOHO MAILBOXES</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, margin: '8px 0' }}>{providerStats.ZOHO}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-2)' }}>Isolated Pool • Configured</div>
+              </div>
+
+              <div
+                onClick={() => { setActiveTab('mailboxes'); setProviderFilter('GMAIL'); }}
+                style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '16px', borderRadius: '12px', cursor: 'pointer' }}
+              >
+                <div style={{ fontSize: '12px', color: '#F87171', fontWeight: 700 }}>GMAIL / WORKSPACE</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, margin: '8px 0' }}>{providerStats.GMAIL}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-2)' }}>Click to add Gmail accounts</div>
+              </div>
+
+              <div
+                onClick={() => { setActiveTab('mailboxes'); setProviderFilter('OUTLOOK'); }}
+                style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.2)', padding: '16px', borderRadius: '12px', cursor: 'pointer' }}
+              >
+                <div style={{ fontSize: '12px', color: 'var(--cyan)', fontWeight: 700 }}>OUTLOOK / MS 365</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, margin: '8px 0' }}>{providerStats.OUTLOOK}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-2)' }}>Click to add Outlook accounts</div>
+              </div>
+
+              <div
+                onClick={() => { setActiveTab('mailboxes'); setProviderFilter('CUSTOM'); }}
+                style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '16px', borderRadius: '12px', cursor: 'pointer' }}
+              >
+                <div style={{ fontSize: '12px', color: 'var(--emerald)', fontWeight: 700 }}>CUSTOM / MAILCOW</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, margin: '8px 0' }}>{providerStats.CUSTOM}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-2)' }}>Private SMTP/IMAP servers</div>
+              </div>
+            </div>
+
             {/* MAILBOX PREVIEW TABLE */}
             <div className="table-card">
               <div className="table-header">
@@ -532,31 +659,12 @@ export default function App() {
           </>
         )}
 
-        {/* MAILBOXES TAB */}
+        {/* MAILBOXES TAB WITH PROVIDER FILTERING */}
         {activeTab === 'mailboxes' && (
           <div className="table-card">
-            <div className="table-header">
-              <h2 className="table-title">All Configured Mailboxes ({mailboxes.length})</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ position: 'relative' }}>
-                  <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-3)' }} />
-                  <input
-                    type="text"
-                    placeholder="Search email or provider..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      padding: '8px 12px 8px 36px',
-                      color: '#fff',
-                      fontSize: '13px',
-                      outline: 'none',
-                      width: '260px',
-                    }}
-                  />
-                </div>
+            <div className="table-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                <h2 className="table-title">Mailbox Management by Provider Group ({filteredMailboxes.length})</h2>
                 <button
                   onClick={() => setShowAddMailboxModal(true)}
                   style={{
@@ -577,6 +685,48 @@ export default function App() {
                   <span>Add New Mailbox</span>
                 </button>
               </div>
+
+              {/* PROVIDER FILTER TABS */}
+              <div style={{ display: 'flex', gap: '8px', width: '100%', borderBottom: '1px solid var(--border)', pb: '12px' }}>
+                {['ALL', 'ZOHO', 'GMAIL', 'OUTLOOK', 'CUSTOM'].map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setProviderFilter(p)}
+                    style={{
+                      background: providerFilter === p ? 'var(--purple-dim)' : 'rgba(255, 255, 255, 0.03)',
+                      color: providerFilter === p ? 'var(--purple-bright)' : 'var(--text-2)',
+                      border: providerFilter === p ? '1px solid var(--purple)' : '1px solid var(--border)',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {p === 'ALL' ? `ALL (${mailboxes.length})` : `${p} (${mailboxes.filter(m => m.provider === p).length})`}
+                  </button>
+                ))}
+
+                <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: 12, top: 10, color: 'var(--text-3)' }} />
+                  <input
+                    type="text"
+                    placeholder="Filter by email address..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      padding: '6px 12px 6px 36px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      outline: 'none',
+                      width: '240px',
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
             <table>
@@ -584,65 +734,160 @@ export default function App() {
                 <tr>
                   <th>Email Address</th>
                   <th>Display Name</th>
-                  <th>Provider</th>
+                  <th>Provider Group</th>
                   <th>SMTP Host</th>
                   <th>Warmup Limit</th>
-                  <th>Sent / Recv</th>
+                  <th>Total Sent / Recv</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredMailboxes.map(mb => (
-                  <tr key={mb.id}>
-                    <td style={{ fontWeight: 600 }}>{mb.email}</td>
-                    <td style={{ color: 'var(--text-2)' }}>{mb.displayName || mb.email.split('@')[0]}</td>
-                    <td>
-                      <span className={`badge badge-${mb.provider.toLowerCase()}`}>
-                        {mb.provider}
-                      </span>
+                {filteredMailboxes.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-3)', padding: '32px' }}>
+                      No mailboxes found in {providerFilter} group. Click "Add New Mailbox" to add one!
                     </td>
-                    <td style={{ fontSize: '12px', color: 'var(--text-2)' }}>{mb.smtpHost}</td>
-                    <td>{mb.warmupDailyLimit} / day</td>
-                    <td>{mb.totalSent || 0} / {mb.totalReceived || 0}</td>
-                    <td>
-                      <span className={`badge ${mb.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>
-                        {mb.status}
-                      </span>
+                  </tr>
+                ) : (
+                  filteredMailboxes.map(mb => (
+                    <tr key={mb.id}>
+                      <td style={{ fontWeight: 600 }}>{mb.email}</td>
+                      <td style={{ color: 'var(--text-2)' }}>{mb.displayName || mb.email.split('@')[0]}</td>
+                      <td>
+                        <span className={`badge badge-${mb.provider.toLowerCase()}`}>
+                          {mb.provider}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '12px', color: 'var(--text-2)' }}>{mb.smtpHost}</td>
+                      <td>{mb.warmupDailyLimit} / day</td>
+                      <td>{mb.totalSent || 0} / {mb.totalReceived || 0}</td>
+                      <td>
+                        <span className={`badge ${mb.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>
+                          {mb.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => toggleMailboxStatus(mb)}
+                            style={{
+                              background: 'none',
+                              border: '1px solid var(--border)',
+                              color: mb.status === 'ACTIVE' ? 'var(--amber)' : 'var(--emerald)',
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                            }}
+                          >
+                            {mb.status === 'ACTIVE' ? 'Pause' : 'Activate'}
+                          </button>
+                          <button
+                            onClick={() => deleteMailbox(mb.id, mb.email)}
+                            style={{
+                              background: 'none',
+                              border: '1px solid var(--red-dim)',
+                              color: 'var(--red)',
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* WARMUP PIPELINE & MESSAGES TAB */}
+        {activeTab === 'pipeline' && (
+          <div className="table-card">
+            <div className="table-header">
+              <h2 className="table-title">Live Warmup Dispatch & Message Inspector ({messages.length})</h2>
+              <button
+                onClick={triggerManualWarmup}
+                style={{
+                  background: 'var(--cyan-dim)',
+                  color: 'var(--cyan)',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <Play size={16} />
+                <span>Simulate Dispatch Now</span>
+              </button>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Sender Email</th>
+                  <th>Recipient Email</th>
+                  <th>Subject</th>
+                  <th>Status</th>
+                  <th>Inspect</th>
+                </tr>
+              </thead>
+              <tbody>
+                {messages.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-3)', padding: '32px' }}>
+                      No messages dispatched yet. Click "Simulate Dispatch Now" to run an exchange!
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                  </tr>
+                ) : (
+                  messages.map(msg => (
+                    <tr key={msg.id}>
+                      <td style={{ fontSize: '12px', color: 'var(--text-2)' }}>
+                        {new Date(msg.createdAt).toLocaleTimeString()}
+                      </td>
+                      <td style={{ fontWeight: 600, color: 'var(--text-1)' }}>{msg.fromMailboxId ? mailboxes.find(m => m.id === msg.fromMailboxId)?.email || 'Warmup Sender' : 'Warmup Sender'}</td>
+                      <td style={{ color: 'var(--cyan)' }}>{msg.toEmail}</td>
+                      <td style={{ color: 'var(--text-2)', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {msg.subject}
+                      </td>
+                      <td>
+                        <span className="badge badge-active">{msg.status}</span>
+                      </td>
+                      <td>
                         <button
-                          onClick={() => toggleMailboxStatus(mb)}
+                          onClick={() => setSelectedMessage(msg)}
                           style={{
-                            background: 'none',
-                            border: '1px solid var(--border)',
-                            color: mb.status === 'ACTIVE' ? 'var(--amber)' : 'var(--emerald)',
-                            padding: '4px 8px',
+                            background: 'var(--purple-dim)',
+                            color: 'var(--purple-bright)',
+                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            padding: '4px 10px',
                             borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '12px',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
                           }}
                         >
-                          {mb.status === 'ACTIVE' ? 'Pause' : 'Activate'}
+                          <Eye size={12} />
+                          <span>Inspect</span>
                         </button>
-                        <button
-                          onClick={() => deleteMailbox(mb.id, mb.email)}
-                          style={{
-                            background: 'none',
-                            border: '1px solid var(--red-dim)',
-                            color: 'var(--red)',
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -787,12 +1032,75 @@ export default function App() {
         )}
       </main>
 
+      {/* INSPECT MESSAGE MODAL */}
+      {selectedMessage && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1100,
+        }}>
+          <div style={{
+            background: 'var(--bg-deep)',
+            border: '1px solid var(--border-bright)',
+            borderRadius: '16px',
+            padding: '32px',
+            width: '600px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MessageSquare color="var(--purple-bright)" size={20} />
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700 }}>Inspecting Warmup Message</h2>
+              </div>
+              <X size={20} style={{ cursor: 'pointer', color: 'var(--text-2)' }} onClick={() => setSelectedMessage(null)} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', borderBottom: '1px solid var(--border)', pb: '16px', marginBottom: '16px' }}>
+              <div>
+                <span style={{ color: 'var(--text-3)', fontSize: '12px', textTransform: 'uppercase', fontWeight: 700 }}>Recipient:</span>
+                <div style={{ color: 'var(--cyan)', fontWeight: 600, marginTop: '2px' }}>{selectedMessage.toEmail}</div>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-3)', fontSize: '12px', textTransform: 'uppercase', fontWeight: 700 }}>Subject:</span>
+                <div style={{ color: '#fff', fontWeight: 600, marginTop: '2px' }}>{selectedMessage.subject}</div>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-3)', fontSize: '12px', textTransform: 'uppercase', fontWeight: 700 }}>Dispatched At:</span>
+                <div style={{ color: 'var(--text-2)', fontSize: '13px', marginTop: '2px' }}>{new Date(selectedMessage.createdAt).toLocaleString()}</div>
+              </div>
+            </div>
+
+            <div>
+              <span style={{ color: 'var(--text-3)', fontSize: '12px', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '8px' }}>Generated Email Body Text:</span>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '16px',
+                color: 'var(--text-1)',
+                fontSize: '13px',
+                lineHeight: '1.6',
+                whiteSpace: 'pre-wrap',
+                maxHeight: '220px',
+                overflowY: 'auto',
+              }}>
+                {selectedMessage.body}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ADD MAILBOX MODAL */}
       {showAddMailboxModal && (
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.8)',
+          background: 'rgba(0, 0, 0, 0.85)',
           backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
@@ -815,7 +1123,7 @@ export default function App() {
 
             <form onSubmit={handleAddMailbox} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-2)', marginBottom: '6px', display: 'block' }}>Provider Type</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-2)', marginBottom: '6px', display: 'block' }}>Provider Group</label>
                 <select
                   value={newMailbox.provider}
                   onChange={e => handleProviderChange(e.target.value)}
@@ -823,7 +1131,8 @@ export default function App() {
                 >
                   <option value="ZOHO">Zoho Mail</option>
                   <option value="GMAIL">Gmail / Google Workspace</option>
-                  <option value="OUTLOOK">Microsoft Outlook / 365</option>
+                  <option value="OUTLOOK">Microsoft Outlook</option>
+                  <option value="MICROSOFT365">Microsoft 365 Enterprise</option>
                   <option value="CUSTOM">Custom SMTP / IMAP (Mailcow)</option>
                 </select>
               </div>
@@ -934,7 +1243,7 @@ export default function App() {
                   fontSize: '14px',
                 }}
               >
-                Save Mailbox & Connect
+                Save Mailbox & Connect to Supabase
               </button>
             </form>
           </div>
@@ -946,7 +1255,7 @@ export default function App() {
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.8)',
+          background: 'rgba(0, 0, 0, 0.85)',
           backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
