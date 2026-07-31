@@ -1,0 +1,353 @@
+// schema.prisma - Voxora Mail Engine (VME)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// WORKSPACE & USERS
+// ============================================
+
+model Workspace {
+  id          String      @id @default(uuid())
+  name        String
+  slug        String      @unique
+  plan        PlanType    @default(FREE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  members     WorkspaceMember[]
+  domains     Domain[]
+  mailboxes   Mailbox[]
+  warmupJobs  WarmupJob[]
+  campaigns   Campaign[]
+  rules       MailboxRule[]
+  logs        EventLog[]
+}
+
+model User {
+  id          String      @id @default(uuid())
+  email       String      @unique
+  name        String?
+  avatarUrl   String?
+  createdAt   DateTime    @default(now())
+
+  workspaces  WorkspaceMember[]
+}
+
+model WorkspaceMember {
+  id          String      @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        MemberRole  @default(USER)
+  createdAt   DateTime    @default(now())
+
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// DOMAINS
+// ============================================
+
+model Domain {
+  id           String       @id @default(uuid())
+  workspaceId  String
+  domain       String
+  status       DomainStatus @default(PENDING)
+
+  // DNS Health
+  spfValid     Boolean      @default(false)
+  dkimValid    Boolean      @default(false)
+  dmarcValid   Boolean      @default(false)
+  mxValid      Boolean      @default(false)
+  lastDnsCheck DateTime?
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  mailboxes    Mailbox[]
+}
+
+// ============================================
+// MAILBOXES (Generic Abstraction - Core Concept)
+// ============================================
+
+model Mailbox {
+  id            String         @id @default(uuid())
+  workspaceId   String
+  domainId      String?
+  email         String         @unique
+  displayName   String?
+  provider      ProviderType   @default(CUSTOM)
+  status        MailboxStatus  @default(INACTIVE)
+
+  // SMTP Config
+  smtpHost      String
+  smtpPort      Int
+  smtpUser      String
+  smtpPassword  String
+  smtpSecure    Boolean        @default(true)
+
+  // IMAP Config
+  imapHost      String
+  imapPort      Int
+  imapUser      String
+  imapPassword  String
+  imapSecure    Boolean        @default(true)
+
+  // Warmup Settings
+  warmupEnabled     Boolean    @default(false)
+  warmupDailyLimit  Int        @default(10)
+  warmupRampupStart Int        @default(3)
+  warmupRampupStep  Int        @default(1)
+  warmupScore       Float      @default(0)
+
+  // Stats
+  totalSent     Int            @default(0)
+  totalReceived Int            @default(0)
+  todaySent     Int            @default(0)
+  todayReceived Int            @default(0)
+  lastActivity  DateTime?
+  lastError     String?
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  domain        Domain?        @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  warmupJobs    WarmupJob[]
+  sentMessages  Message[]      @relation("SentMessages")
+  receivedMessages Message[]   @relation("ReceivedMessages")
+  rules         MailboxRule[]
+}
+
+// ============================================
+// RULES ENGINE
+// ============================================
+
+model MailboxRule {
+  id              String      @id @default(uuid())
+  workspaceId     String
+  mailboxId       String?
+  name            String      @default("Default Rule")
+
+  maxDailyEmails  Int         @default(20)
+  minDailyEmails  Int         @default(3)
+  replyDelayMin   Int         @default(15)
+  replyDelayMax   Int         @default(180)
+  sendOnWeekends  Boolean     @default(false)
+  businessHoursOnly Boolean   @default(true)
+  businessStart   Int         @default(8)
+  businessEnd     Int         @default(18)
+  timezone        String      @default("UTC")
+  randomFactor    Float       @default(0.3)
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  workspace       Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  mailbox         Mailbox?    @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// MESSAGES & CONVERSATIONS
+// ============================================
+
+model Message {
+  id              String         @id @default(uuid())
+  workspaceId     String
+  conversationId  String?
+  messageId       String?
+  inReplyTo       String?
+  type            MessageType    @default(WARMUP)
+
+  fromMailboxId   String
+  toMailboxId     String?
+  toEmail         String
+
+  subject         String
+  body            String
+  htmlBody        String?
+
+  status          MessageStatus  @default(QUEUED)
+  sentAt          DateTime?
+  openedAt        DateTime?
+  repliedAt       DateTime?
+  spamAt          DateTime?
+  recoveredAt     DateTime?
+
+  createdAt       DateTime       @default(now())
+
+  fromMailbox     Mailbox        @relation("SentMessages", fields: [fromMailboxId], references: [id], onDelete: Cascade)
+  toMailbox       Mailbox?       @relation("ReceivedMessages", fields: [toMailboxId], references: [id], onDelete: SetNull)
+  conversation    Conversation?  @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+}
+
+model Conversation {
+  id            String      @id @default(uuid())
+  workspaceId   String
+  subject       String
+  type          MessageType @default(WARMUP)
+  status        ConvStatus  @default(ACTIVE)
+  messageCount  Int         @default(0)
+  lastMessageAt DateTime?
+  createdAt     DateTime    @default(now())
+
+  messages      Message[]
+}
+
+// ============================================
+// WARMUP JOBS
+// ============================================
+
+model WarmupJob {
+  id            String      @id @default(uuid())
+  workspaceId   String
+  mailboxId     String
+  jobId         String?
+  type          JobType
+  status        JobStatus   @default(PENDING)
+  scheduledFor  DateTime
+  processedAt   DateTime?
+  error         String?
+  payload       Json?
+
+  createdAt     DateTime    @default(now())
+
+  workspace     Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  mailbox       Mailbox     @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// CAMPAIGNS (v2 Future)
+// ============================================
+
+model Campaign {
+  id             String          @id @default(uuid())
+  workspaceId    String
+  name           String
+  status         CampaignStatus  @default(DRAFT)
+  fromMailboxIds String[]
+  dailyLimit     Int             @default(50)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// EVENT LOGS
+// ============================================
+
+model EventLog {
+  id            String      @id @default(uuid())
+  workspaceId   String
+  entity        String
+  entityId      String?
+  event         String
+  level         LogLevel    @default(INFO)
+  message       String
+  metadata      Json?
+  createdAt     DateTime    @default(now())
+
+  workspace     Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// ENUMS (Multi-line syntax)
+// ============================================
+
+enum PlanType {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum DomainStatus {
+  PENDING
+  ACTIVE
+  ERROR
+}
+
+enum MailboxStatus {
+  ACTIVE
+  INACTIVE
+  PAUSED
+  ERROR
+}
+
+enum ProviderType {
+  ZOHO
+  GMAIL
+  OUTLOOK
+  MICROSOFT365
+  CUSTOM
+}
+
+enum MessageType {
+  WARMUP
+  COLD_EMAIL
+  REPLY
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  REPLIED
+  BOUNCED
+  SPAM
+  RECOVERED
+  FAILED
+}
+
+enum ConvStatus {
+  ACTIVE
+  FINISHED
+}
+
+enum JobType {
+  SEND
+  REPLY
+  SPAM_CHECK
+  SPAM_RECOVERY
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  FINISHED
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+}
