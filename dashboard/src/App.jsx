@@ -39,7 +39,8 @@ import {
   ArrowUpRight,
   ChevronRight,
   ShieldCheck,
-  ZapOff
+  ZapOff,
+  Compass
 } from 'lucide-react';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement,
@@ -51,9 +52,9 @@ import './index.css';
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, ArcElement, Title, Tooltip, Legend);
 
 /* ═══════════════════════════════════════════════════════════
-   3D ATMOSPHERIC NEBULA CANVAS — Apple VisionOS & Vercel DNA
+   IMMERSIVE NEURAL OPERATING SYSTEM CANVAS — Apple VisionOS & Sci-fi DNA
    ═══════════════════════════════════════════════════════════ */
-function AtmosphericNebulaCanvas() {
+function AIOSNeuralCanvas() {
   const canvasRef = useRef(null);
   const mouse = useRef({ x: -9999, y: -9999 });
   const animRef = useRef(null);
@@ -61,11 +62,11 @@ function AtmosphericNebulaCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    let width, height, nodes;
+    let width, height, nodes, lightPulse = 0;
 
-    const NODE_COUNT = 90;
-    const MAX_DIST = 170;
-    const MOUSE_RADIUS = 240;
+    const NODE_COUNT = 100;
+    const MAX_DIST = 180;
+    const MOUSE_RADIUS = 260;
 
     function resize() {
       width = canvas.width = canvas.offsetWidth;
@@ -76,9 +77,9 @@ function AtmosphericNebulaCanvas() {
       nodes = Array.from({ length: NODE_COUNT }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        radius: Math.random() * 2 + 0.8,
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: (Math.random() - 0.5) * 0.35,
+        radius: Math.random() * 2.2 + 0.8,
         color: Math.random() > 0.5 ? '129,140,248' : '56,189,248',
         pulse: Math.random() * Math.PI * 2,
       }));
@@ -86,22 +87,38 @@ function AtmosphericNebulaCanvas() {
 
     function drawFrame() {
       ctx.clearRect(0, 0, width, height);
+      lightPulse += 0.01;
 
-      // Deep volumetric lighting gradients
-      const g1 = ctx.createRadialGradient(width * 0.7, height * 0.2, 0, width * 0.7, height * 0.2, 600);
-      g1.addColorStop(0, 'rgba(129, 140, 248, 0.08)');
+      // Dynamic Volumetric Fog & Atmospheric Radial Orbs
+      const g1 = ctx.createRadialGradient(
+        width * 0.75 + Math.sin(lightPulse) * 40,
+        height * 0.25 + Math.cos(lightPulse) * 30,
+        0,
+        width * 0.75,
+        height * 0.25,
+        650
+      );
+      g1.addColorStop(0, 'rgba(129, 140, 248, 0.12)');
       g1.addColorStop(1, 'transparent');
       ctx.fillStyle = g1; ctx.fillRect(0, 0, width, height);
 
-      const g2 = ctx.createRadialGradient(width * 0.15, height * 0.75, 0, width * 0.15, height * 0.75, 500);
-      g2.addColorStop(0, 'rgba(56, 189, 248, 0.06)');
+      const g2 = ctx.createRadialGradient(
+        width * 0.2 - Math.cos(lightPulse) * 30,
+        height * 0.8 - Math.sin(lightPulse) * 40,
+        0,
+        width * 0.2,
+        height * 0.8,
+        550
+      );
+      g2.addColorStop(0, 'rgba(56, 189, 248, 0.09)');
       g2.addColorStop(1, 'transparent');
       ctx.fillStyle = g2; ctx.fillRect(0, 0, width, height);
 
+      // Node Physics & Levitation
       nodes.forEach((n) => {
         n.x += n.vx;
         n.y += n.vy;
-        n.pulse += 0.015;
+        n.pulse += 0.018;
 
         if (n.x < 0 || n.x > width) n.vx *= -1;
         if (n.y < 0 || n.y > height) n.vy *= -1;
@@ -111,15 +128,15 @@ function AtmosphericNebulaCanvas() {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < MOUSE_RADIUS) {
           const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
-          n.vx += (dx / dist) * force * 0.2;
-          n.vy += (dy / dist) * force * 0.2;
+          n.vx += (dx / dist) * force * 0.22;
+          n.vy += (dy / dist) * force * 0.22;
         }
 
         const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
-        if (speed > 1.0) { n.vx = (n.vx / speed) * 1.0; n.vy = (n.vy / speed) * 1.0; }
+        if (speed > 1.1) { n.vx = (n.vx / speed) * 1.1; n.vy = (n.vy / speed) * 1.1; }
 
-        const r = n.radius + Math.sin(n.pulse) * 0.5;
-        const alpha = 0.4 + Math.sin(n.pulse) * 0.2;
+        const r = n.radius + Math.sin(n.pulse) * 0.6;
+        const alpha = 0.45 + Math.sin(n.pulse) * 0.25;
 
         ctx.beginPath();
         ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
@@ -127,6 +144,7 @@ function AtmosphericNebulaCanvas() {
         ctx.fill();
       });
 
+      // Neural Synapse Connections
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const a = nodes[i], b = nodes[j];
@@ -134,12 +152,12 @@ function AtmosphericNebulaCanvas() {
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < MAX_DIST) {
-            const alpha = (1 - dist / MAX_DIST) * 0.18;
+            const alpha = (1 - dist / MAX_DIST) * 0.2;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.strokeStyle = `rgba(129, 140, 248,${alpha})`;
-            ctx.lineWidth = 0.6;
+            ctx.lineWidth = 0.7;
             ctx.stroke();
           }
         }
@@ -172,9 +190,9 @@ function AtmosphericNebulaCanvas() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   3D REFRACTIVE SPOTLIGHT CARD — Linear & Apple VisionOS DNA
+   3D SUSPENDED HOLOGRAPHIC PANEL CARD — Interactive Mouse Lighting
    ═══════════════════════════════════════════════════════════ */
-function SpotlightCard3D({ children, className = '', style = {} }) {
+function SuspendedPanelCard({ children, className = '', style = {} }) {
   const cardRef = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -191,7 +209,7 @@ function SpotlightCard3D({ children, className = '', style = {} }) {
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`spotlight-card-3d ${className}`}
+      className={`suspended-panel ${className}`}
       style={{ ...style }}
     >
       {isHovered && (
@@ -200,7 +218,7 @@ function SpotlightCard3D({ children, className = '', style = {} }) {
             position: 'absolute',
             inset: 0,
             pointerEvents: 'none',
-            background: `radial-gradient(450px circle at ${position.x}px ${position.y}px, rgba(129, 140, 248, 0.15), transparent 45%)`,
+            background: `radial-gradient(500px circle at ${position.x}px ${position.y}px, rgba(129, 140, 248, 0.18), transparent 45%)`,
             zIndex: 1,
           }}
         />
@@ -210,7 +228,7 @@ function SpotlightCard3D({ children, className = '', style = {} }) {
   );
 }
 
-/* VOLUMETRIC RADIAL HEALTH GAUGE RING */
+/* VOLUMETRIC RADIAL HEALTH RING */
 function VolumetricHealthRing({ score = 98 }) {
   const radius = 34;
   const stroke = 6;
@@ -247,7 +265,7 @@ function VolumetricHealthRing({ score = 98 }) {
           </linearGradient>
         </defs>
       </svg>
-      <span style={{ position: 'absolute', fontSize: '13px', fontWeight: 800, color: 'var(--emerald-accent)' }}>
+      <span style={{ position: 'absolute', fontSize: '13px', fontWeight: 800, color: 'var(--emerald-glow)' }}>
         {score}%
       </span>
     </div>
@@ -288,7 +306,6 @@ export default function App() {
 
   const [newDomainName, setNewDomainName] = useState('');
 
-  // Keyboard shortcut listener for Cmd+K / Ctrl+K (Raycast DNA)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -523,99 +540,99 @@ export default function App() {
     datasets: [
       {
         data: [providerStats.ZOHO || 45, providerStats.GMAIL || 0, providerStats.OUTLOOK || 0, providerStats.CUSTOM || 0],
-        backgroundColor: ['#818CF8', '#F87171', '#38BDF8', '#34D399'],
+        backgroundColor: ['#818CF8', '#FB7185', '#38BDF8', '#34D399'],
         borderWidth: 0,
       }
     ]
   };
 
   return (
-    <div className="app-viewport">
-      {/* 3D CANVAS ATMOSPHERE */}
-      <AtmosphericNebulaCanvas />
+    <div className="ai-os-viewport">
+      {/* IMMERSIVE NEURAL CANVAS ATMOSPHERE */}
+      <AIOSNeuralCanvas />
 
-      {/* FLOATING GLASS SIDEBAR — Linear / Arc DNA */}
-      <aside className="floating-sidebar">
-        <div className="brand-header">
-          <div className="brand-3d-logo">V</div>
+      {/* SUSPENDED HOLOGRAPHIC SIDEBAR */}
+      <aside className="holo-sidebar">
+        <div className="holo-brand">
+          <div className="holo-orb-logo">V</div>
           <div>
-            <div className="brand-title">VOXORA VME</div>
-            <div className="brand-badge">PRODUCT DESIGN v2.0</div>
+            <div style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'var(--font-heading)', background: 'linear-gradient(180deg, #FFF 0%, #94A3B8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VOXORA AI</div>
+            <div style={{ fontSize: '10px', color: 'var(--cyan-glow)', fontWeight: 800, letterSpacing: '0.15em' }}>AI OPERATING SYSTEM</div>
           </div>
         </div>
 
-        <div className="nav-label">Product Views</div>
-        <div className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
+        <div className="nav-group-label">Intelligence Views</div>
+        <div className={`holo-nav-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
           <Activity size={18} />
-          <span>Executive Overview</span>
+          <span>Core Intelligence</span>
         </div>
-        <div className={`nav-link ${activeTab === 'mailboxes' ? 'active' : ''}`} onClick={() => setActiveTab('mailboxes')}>
+        <div className={`holo-nav-btn ${activeTab === 'mailboxes' ? 'active' : ''}`} onClick={() => setActiveTab('mailboxes')}>
           <Mail size={18} />
           <span>Mailboxes ({mailboxes.length})</span>
         </div>
-        <div className={`nav-link ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => setActiveTab('pipeline')}>
+        <div className={`holo-nav-btn ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => setActiveTab('pipeline')}>
           <MessageSquare size={18} />
           <span>Warmup Activity</span>
         </div>
 
-        <div className="nav-label">Infrastructure</div>
-        <div className={`nav-link ${activeTab === 'domains' ? 'active' : ''}`} onClick={() => setActiveTab('domains')}>
+        <div className="nav-group-label">Infrastructure</div>
+        <div className={`holo-nav-btn ${activeTab === 'domains' ? 'active' : ''}`} onClick={() => setActiveTab('domains')}>
           <Globe size={18} />
           <span>Domains ({domains.length})</span>
         </div>
-        <div className={`nav-link ${activeTab === 'shield' ? 'active' : ''}`} onClick={() => setActiveTab('shield')}>
+        <div className={`holo-nav-btn ${activeTab === 'shield' ? 'active' : ''}`} onClick={() => setActiveTab('shield')}>
           <Shield size={18} />
           <span>Deliverability Shield</span>
         </div>
-        <div className={`nav-link ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
+        <div className={`holo-nav-btn ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
           <Radio size={18} />
-          <span>System Audit Logs</span>
+          <span>System Audit Telemetry</span>
         </div>
 
-        {/* RAYCAST COMMAND PALETTE TRIGGER */}
-        <div className="cmd-k-trigger" onClick={() => setShowCmdK(true)}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+        {/* RAYCAST COMMAND TRIGGER */}
+        <div onClick={() => setShowCmdK(true)} style={{ marginTop: 'auto', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-glass)', borderRadius: '16px', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
             <Command size={14} />
-            <span>Search or command...</span>
+            <span>AI Command Center...</span>
           </div>
-          <span className="cmd-key">⌘K</span>
+          <span style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 6px', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)' }}>⌘K</span>
         </div>
       </aside>
 
-      {/* FLOATING MAIN CONTAINER */}
-      <main className="floating-main">
-        {/* TOP CONTROL HEADER */}
-        <header className="main-header">
+      {/* SUSPENDED HOLOGRAPHIC MAIN CORE */}
+      <main className="holo-main-core">
+        {/* TOP HEADER CORE */}
+        <header className="holo-top-bar">
           <div>
-            <div className="header-title">
-              {activeTab === 'overview' && 'Deliverability & Warmup Executive Center'}
-              {activeTab === 'mailboxes' && 'Mailbox Network & Provider Distribution'}
-              {activeTab === 'pipeline' && 'Live Warmup Dispatch & Message Inspector'}
-              {activeTab === 'domains' && 'Domain Infrastructure & Technical DNS'}
+            <div style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'var(--font-heading)', background: 'linear-gradient(180deg, #FFF 0%, #94A3B8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              {activeTab === 'overview' && 'Voxora AI Autonomous Command System'}
+              {activeTab === 'mailboxes' && 'Mailbox Network & Provider Pools'}
+              {activeTab === 'pipeline' && 'Live Warmup Dispatch & Inspector'}
+              {activeTab === 'domains' && 'Domain Infrastructure & DNS Diagnostics'}
               {activeTab === 'shield' && 'Deliverability Shield & Circuit Breaker'}
               {activeTab === 'logs' && 'Real-Time System Audit Telemetry'}
             </div>
-            <div className="header-subtitle">Engineered by Voxora Design System • Apple & Linear Standard</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-subtle)' }}>Billion-Dollar AI Control Engine • Live Supabase Synchronization</div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
               onClick={triggerManualWarmup}
               style={{
-                background: 'linear-gradient(135deg, var(--violet-accent) 0%, var(--cyan-accent) 100%)',
+                background: 'linear-gradient(135deg, var(--violet-glow) 0%, var(--cyan-glow) 100%)',
                 color: '#fff',
-                padding: '10px 20px',
-                borderRadius: '12px',
+                padding: '10px 22px',
+                borderRadius: '14px',
                 border: 'none',
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: 'pointer',
                 fontSize: '13px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 8px 25px rgba(129, 140, 248, 0.35)',
+                boxShadow: '0 0 30px rgba(129, 140, 248, 0.4)',
               }}
             >
               <Play size={15} />
@@ -623,17 +640,17 @@ export default function App() {
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => setShowAddMailboxModal(true)}
               style={{
-                background: 'rgba(52, 211, 153, 0.12)',
-                color: 'var(--emerald-accent)',
-                border: '1px solid rgba(52, 211, 153, 0.3)',
+                background: 'rgba(52, 211, 153, 0.15)',
+                color: 'var(--emerald-glow)',
+                border: '1px solid rgba(52, 211, 153, 0.35)',
                 padding: '10px 16px',
-                borderRadius: '12px',
+                borderRadius: '14px',
                 cursor: 'pointer',
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: '13px',
                 display: 'flex',
                 alignItems: 'center',
@@ -644,106 +661,106 @@ export default function App() {
               <span>Add Mailbox</span>
             </motion.button>
 
-            <button onClick={fetchDashboardData} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-glass)', color: '#fff', padding: '10px', borderRadius: '12px', cursor: 'pointer' }}>
+            <button onClick={fetchDashboardData} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-glass)', color: '#fff', padding: '10px', borderRadius: '14px', cursor: 'pointer' }}>
               <RefreshCw size={15} className={loading ? 'spin' : ''} />
             </button>
           </div>
         </header>
 
         {/* SCROLLABLE VIEWPORT */}
-        <div className="scroll-viewport">
+        <div className="holo-viewport">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -18 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               {/* OVERVIEW TAB */}
               {activeTab === 'overview' && (
                 <>
-                  {/* HERO LUXURY BANNER */}
-                  <div className="hero-luxury">
-                    <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--cyan-accent)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '12px' }}>
-                      ULTRA-LUXURY AUTOMATED DELIVERABILITY
+                  {/* CINEMATIC HERO */}
+                  <div className="cinematic-hero">
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--cyan-glow)', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '14px' }}>
+                      IMMERSIVE ARTIFICIAL INTELLIGENCE OPERATING SYSTEM
                     </div>
-                    <h1 style={{ fontSize: '38px', fontWeight: 800, letterSpacing: '-0.04em', background: 'linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '12px' }}>
-                      Vox Mail Engine (VME)
+                    <h1 style={{ fontSize: '42px', fontWeight: 900, letterSpacing: '-0.04em', fontFamily: 'var(--font-heading)', background: 'linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '14px' }}>
+                      Vox Mail Engine (VME AI Core)
                     </h1>
-                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', maxWidth: '580px', lineHeight: 1.6 }}>
-                      Multi-provider AI warmup infrastructure engineered for maximum inbox placement across Zoho, Gmail, Outlook & Mailcow.
+                    <p style={{ fontSize: '15px', color: 'var(--text-muted)', maxWidth: '620px', lineHeight: 1.7 }}>
+                      Autonomous multi-provider neural warmup infrastructure. Every layer breathes, every node levitates, every deliverability signal is continuously optimized.
                     </p>
                   </div>
 
-                  {/* 3D METRICS GRID */}
-                  <div className="metrics-3d-grid">
-                    <SpotlightCard3D>
+                  {/* 3D SUSPENDED PANELS GRID */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                    <SuspendedPanelCard>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Active Mailboxes</span>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(129, 140, 248, 0.15)', color: 'var(--violet-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={18} /></div>
+                        <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-subtle)', textTransform: 'uppercase' }}>Active Mailboxes</span>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(129, 140, 248, 0.18)', color: 'var(--violet-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={18} /></div>
                       </div>
-                      <div style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px' }}>{activeCount} / {mailboxes.length}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--violet-accent)', fontWeight: 600 }}>100% Operational Network</div>
-                    </SpotlightCard3D>
+                      <div style={{ fontSize: '38px', fontWeight: 900, letterSpacing: '-0.04em', marginBottom: '8px' }}>{activeCount} / {mailboxes.length}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--violet-glow)', fontWeight: 700 }}>100% Operational Network</div>
+                    </SuspendedPanelCard>
 
-                    <SpotlightCard3D>
+                    <SuspendedPanelCard>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Deliverability Health</span>
+                        <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-subtle)', textTransform: 'uppercase' }}>Deliverability Health</span>
                         <VolumetricHealthRing score={avgHealthScore} />
                       </div>
-                      <div style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--emerald-accent)', marginBottom: '8px' }}>{avgHealthScore}%</div>
-                      <div style={{ fontSize: '12px', color: 'var(--emerald-accent)', fontWeight: 600 }}>Grade A+ Deliverability</div>
-                    </SpotlightCard3D>
+                      <div style={{ fontSize: '38px', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--emerald-glow)', marginBottom: '8px' }}>{avgHealthScore}%</div>
+                      <div style={{ fontSize: '12px', color: 'var(--emerald-glow)', fontWeight: 700 }}>Grade A+ Deliverability</div>
+                    </SuspendedPanelCard>
 
-                    <SpotlightCard3D>
+                    <SuspendedPanelCard>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Warmup Sent</span>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.15)', color: 'var(--cyan-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Zap size={18} /></div>
+                        <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-subtle)', textTransform: 'uppercase' }}>Warmup Sent</span>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.18)', color: 'var(--cyan-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Zap size={18} /></div>
                       </div>
-                      <div style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px' }}>{totalSent}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--cyan-accent)', fontWeight: 600 }}>Across {domains.length} Domains</div>
-                    </SpotlightCard3D>
+                      <div style={{ fontSize: '38px', fontWeight: 900, letterSpacing: '-0.04em', marginBottom: '8px' }}>{totalSent}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--cyan-glow)', fontWeight: 700 }}>Across {domains.length} Domains</div>
+                    </SuspendedPanelCard>
 
-                    <SpotlightCard3D>
+                    <SuspendedPanelCard>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Spam Rescued</span>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.15)', color: 'var(--amber-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Inbox size={18} /></div>
+                        <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-subtle)', textTransform: 'uppercase' }}>Spam Rescued</span>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.18)', color: 'var(--amber-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Inbox size={18} /></div>
                       </div>
-                      <div style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px' }}>{totalReceived}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--amber-accent)', fontWeight: 600 }}>100% Folder Recovery</div>
-                    </SpotlightCard3D>
+                      <div style={{ fontSize: '38px', fontWeight: 900, letterSpacing: '-0.04em', marginBottom: '8px' }}>{totalReceived}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--amber-glow)', fontWeight: 700 }}>100% Folder Recovery</div>
+                    </SuspendedPanelCard>
                   </div>
 
                   {/* GRAPHS ROW */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '28px' }}>
-                    <SpotlightCard3D>
-                      <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '4px' }}>Warmup Dispatch Telemetry</div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>Daily warmup email exchange distribution</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '32px' }}>
+                    <SuspendedPanelCard>
+                      <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-heading)', marginBottom: '4px' }}>Warmup Dispatch Telemetry</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-subtle)', marginBottom: '20px' }}>Neural exchange analytics over current cycle</div>
                       <div style={{ height: '240px' }}>
                         <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94A3B8' } } }, scales: { x: { ticks: { color: '#94A3B8' } }, y: { ticks: { color: '#94A3B8' } } } }} />
                       </div>
-                    </SpotlightCard3D>
+                    </SuspendedPanelCard>
 
-                    <SpotlightCard3D>
-                      <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '4px' }}>Provider Distribution</div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>Multi-provider balance matrix</div>
+                    <SuspendedPanelCard>
+                      <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-heading)', marginBottom: '4px' }}>Provider Pool Matrix</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-subtle)', marginBottom: '20px' }}>Multi-provider balance network</div>
                       <div style={{ height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Doughnut data={doughnutData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', font: { size: 11 } } } } }} />
                       </div>
-                    </SpotlightCard3D>
+                    </SuspendedPanelCard>
                   </div>
 
                   {/* MAILBOX TABLE */}
-                  <div className="table-luxury">
-                    <div className="table-luxury-header">
-                      <div style={{ fontSize: '16px', fontWeight: 800 }}>Network Mailboxes Quick View</div>
-                      <button onClick={() => setActiveTab('mailboxes')} style={{ background: 'none', border: 'none', color: 'var(--cyan-accent)', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>
+                  <div className="holo-table-card">
+                    <div className="holo-table-header">
+                      <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>Network Mailboxes Quick View</div>
+                      <button onClick={() => setActiveTab('mailboxes')} style={{ background: 'none', border: 'none', color: 'var(--cyan-glow)', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
                         View All ({mailboxes.length}) →
                       </button>
                     </div>
 
-                    <table className="glass-table">
+                    <table className="holo-table">
                       <thead>
                         <tr>
                           <th>Email Address</th>
@@ -759,17 +776,17 @@ export default function App() {
                         {mailboxes.slice(0, 8).map(mb => (
                           <tr key={mb.id}>
                             <td style={{ fontWeight: 700 }}>{mb.email}</td>
-                            <td><span className={`badge-pill badge-${mb.provider.toLowerCase()}`}>{mb.provider}</span></td>
-                            <td><span className={`badge-pill ${mb.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>{mb.status}</span></td>
+                            <td><span className={`badge-holo badge-${mb.provider.toLowerCase()}`}>{mb.provider}</span></td>
+                            <td><span className={`badge-holo ${mb.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>{mb.status}</span></td>
                             <td>{mb.warmupDailyLimit} / day</td>
                             <td>{mb.todaySent || 0}</td>
                             <td>{mb.todayReceived || 0}</td>
                             <td>
                               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <button onClick={() => toggleMailboxStatus(mb)} style={{ background: mb.status === 'ACTIVE' ? 'rgba(251, 191, 36, 0.15)' : 'rgba(52, 211, 153, 0.15)', border: `1px solid ${mb.status === 'ACTIVE' ? 'rgba(251, 191, 36, 0.3)' : 'rgba(52, 211, 153, 0.3)'}`, color: mb.status === 'ACTIVE' ? 'var(--amber-accent)' : 'var(--emerald-accent)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}>
+                                <button onClick={() => toggleMailboxStatus(mb)} style={{ background: mb.status === 'ACTIVE' ? 'rgba(251, 191, 36, 0.15)' : 'rgba(52, 211, 153, 0.15)', border: `1px solid ${mb.status === 'ACTIVE' ? 'rgba(251, 191, 36, 0.35)' : 'rgba(52, 211, 153, 0.35)'}`, color: mb.status === 'ACTIVE' ? 'var(--amber-glow)' : 'var(--emerald-glow)', padding: '6px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 800 }}>
                                   {mb.status === 'ACTIVE' ? 'Pause' : 'Activate'}
                                 </button>
-                                <button onClick={() => deleteMailbox(mb.id, mb.email)} style={{ background: 'rgba(248, 113, 113, 0.15)', border: '1px solid rgba(248, 113, 113, 0.3)', color: 'var(--red-accent)', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer' }}>
+                                <button onClick={() => deleteMailbox(mb.id, mb.email)} style={{ background: 'rgba(251, 113, 133, 0.15)', border: '1px solid rgba(251, 113, 133, 0.35)', color: 'var(--rose-glow)', padding: '6px 10px', borderRadius: '10px', cursor: 'pointer' }}>
                                   <Trash2 size={14} />
                                 </button>
                               </div>
@@ -784,31 +801,31 @@ export default function App() {
 
               {/* MAILBOXES TAB */}
               {activeTab === 'mailboxes' && (
-                <div className="table-luxury">
-                  <div className="table-luxury-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px' }}>
+                <div className="holo-table-card">
+                  <div className="holo-table-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '18px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 800 }}>Mailbox Network by Provider Group ({filteredMailboxes.length})</div>
-                      <button onClick={() => setShowAddMailboxModal(true)} style={{ background: 'rgba(129, 140, 248, 0.15)', color: 'var(--violet-accent)', border: '1px solid rgba(129, 140, 248, 0.3)', padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>Mailbox Network by Provider Group ({filteredMailboxes.length})</div>
+                      <button onClick={() => setShowAddMailboxModal(true)} style={{ background: 'rgba(129, 140, 248, 0.2)', color: 'var(--violet-glow)', border: '1px solid rgba(129, 140, 248, 0.4)', padding: '10px 20px', borderRadius: '14px', cursor: 'pointer', fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Plus size={16} />
                         <span>Add New Mailbox</span>
                       </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px', width: '100%', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', gap: '10px', width: '100%', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '14px' }}>
                       {['ALL', 'ZOHO', 'GMAIL', 'OUTLOOK', 'CUSTOM'].map(p => (
-                        <button key={p} onClick={() => setProviderFilter(p)} style={{ background: providerFilter === p ? 'rgba(129, 140, 248, 0.2)' : 'rgba(255, 255, 255, 0.03)', color: providerFilter === p ? 'var(--violet-accent)' : 'var(--text-secondary)', border: providerFilter === p ? '1px solid var(--violet-accent)' : '1px solid var(--border-subtle)', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
+                        <button key={p} onClick={() => setProviderFilter(p)} style={{ background: providerFilter === p ? 'rgba(129, 140, 248, 0.25)' : 'rgba(255, 255, 255, 0.04)', color: providerFilter === p ? 'var(--violet-glow)' : 'var(--text-muted)', border: providerFilter === p ? '1px solid var(--violet-glow)' : '1px solid var(--border-glass)', padding: '8px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '13px', fontWeight: 800 }}>
                           {p === 'ALL' ? `ALL (${mailboxes.length})` : `${p} (${mailboxes.filter(m => m.provider === p).length})`}
                         </button>
                       ))}
 
                       <div style={{ marginLeft: 'auto', position: 'relative' }}>
-                        <Search size={16} style={{ position: 'absolute', left: 12, top: 10, color: 'var(--text-muted)' }} />
-                        <input type="text" placeholder="Search mailboxes..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '8px 12px 8px 36px', color: '#fff', fontSize: '13px', outline: 'none', width: '240px' }} />
+                        <Search size={16} style={{ position: 'absolute', left: 12, top: 10, color: 'var(--text-subtle)' }} />
+                        <input type="text" placeholder="Search mailboxes..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '12px', padding: '8px 12px 8px 36px', color: '#fff', fontSize: '13px', outline: 'none', width: '250px' }} />
                       </div>
                     </div>
                   </div>
 
-                  <table className="glass-table">
+                  <table className="holo-table">
                     <thead>
                       <tr>
                         <th>Email Address</th>
@@ -825,18 +842,18 @@ export default function App() {
                       {filteredMailboxes.map(mb => (
                         <tr key={mb.id}>
                           <td style={{ fontWeight: 700 }}>{mb.email}</td>
-                          <td style={{ color: 'var(--text-secondary)' }}>{mb.displayName || mb.email.split('@')[0]}</td>
-                          <td><span className={`badge-pill badge-${mb.provider.toLowerCase()}`}>{mb.provider}</span></td>
-                          <td style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{mb.smtpHost}</td>
+                          <td style={{ color: 'var(--text-muted)' }}>{mb.displayName || mb.email.split('@')[0]}</td>
+                          <td><span className={`badge-holo badge-${mb.provider.toLowerCase()}`}>{mb.provider}</span></td>
+                          <td style={{ fontSize: '12px', color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>{mb.smtpHost}</td>
                           <td>{mb.warmupDailyLimit} / day</td>
                           <td>{mb.totalSent || 0} / {mb.totalReceived || 0}</td>
-                          <td><span className={`badge-pill ${mb.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>{mb.status}</span></td>
+                          <td><span className={`badge-holo ${mb.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>{mb.status}</span></td>
                           <td>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                              <button onClick={() => toggleMailboxStatus(mb)} style={{ background: mb.status === 'ACTIVE' ? 'rgba(251, 191, 36, 0.15)' : 'rgba(52, 211, 153, 0.15)', border: `1px solid ${mb.status === 'ACTIVE' ? 'rgba(251, 191, 36, 0.3)' : 'rgba(52, 211, 153, 0.3)'}`, color: mb.status === 'ACTIVE' ? 'var(--amber-accent)' : 'var(--emerald-accent)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}>
+                              <button onClick={() => toggleMailboxStatus(mb)} style={{ background: mb.status === 'ACTIVE' ? 'rgba(251, 191, 36, 0.15)' : 'rgba(52, 211, 153, 0.15)', border: `1px solid ${mb.status === 'ACTIVE' ? 'rgba(251, 191, 36, 0.35)' : 'rgba(52, 211, 153, 0.35)'}`, color: mb.status === 'ACTIVE' ? 'var(--amber-glow)' : 'var(--emerald-glow)', padding: '6px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 800 }}>
                                 {mb.status === 'ACTIVE' ? 'Pause' : 'Activate'}
                               </button>
-                              <button onClick={() => deleteMailbox(mb.id, mb.email)} style={{ background: 'rgba(248, 113, 113, 0.15)', border: '1px solid rgba(248, 113, 113, 0.3)', color: 'var(--red-accent)', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer' }}>
+                              <button onClick={() => deleteMailbox(mb.id, mb.email)} style={{ background: 'rgba(251, 113, 133, 0.15)', border: '1px solid rgba(251, 113, 133, 0.35)', color: 'var(--rose-glow)', padding: '6px 10px', borderRadius: '10px', cursor: 'pointer' }}>
                                 <Trash2 size={14} />
                               </button>
                             </div>
@@ -850,16 +867,16 @@ export default function App() {
 
               {/* PIPELINE TAB */}
               {activeTab === 'pipeline' && (
-                <div className="table-luxury">
-                  <div className="table-luxury-header">
-                    <div style={{ fontSize: '16px', fontWeight: 800 }}>Live Warmup Dispatch & Message Inspector ({messages.length})</div>
-                    <button onClick={triggerManualWarmup} style={{ background: 'rgba(56, 189, 248, 0.15)', color: 'var(--cyan-accent)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="holo-table-card">
+                  <div className="holo-table-header">
+                    <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>Live Warmup Dispatch & Message Inspector ({messages.length})</div>
+                    <button onClick={triggerManualWarmup} style={{ background: 'rgba(56, 189, 248, 0.18)', color: 'var(--cyan-glow)', border: '1px solid rgba(56, 189, 248, 0.4)', padding: '10px 20px', borderRadius: '14px', cursor: 'pointer', fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Play size={15} />
                       <span>Simulate Dispatch Now</span>
                     </button>
                   </div>
 
-                  <table className="glass-table">
+                  <table className="holo-table">
                     <thead>
                       <tr>
                         <th>Timestamp</th>
@@ -876,19 +893,19 @@ export default function App() {
                         const recipientMb = mailboxes.find(m => m.id === msg.toMailboxId);
                         return (
                           <tr key={msg.id}>
-                            <td style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{new Date(msg.createdAt).toLocaleTimeString()}</td>
+                            <td style={{ fontSize: '12px', color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>{new Date(msg.createdAt).toLocaleTimeString()}</td>
                             <td style={{ fontWeight: 700 }}>
                               {senderMb ? senderMb.email : 'Warmup Sender'}
-                              {senderMb && <span className={`badge-pill badge-${senderMb.provider.toLowerCase()}`} style={{ marginLeft: '8px' }}>{senderMb.provider}</span>}
+                              {senderMb && <span className={`badge-holo badge-${senderMb.provider.toLowerCase()}`} style={{ marginLeft: '8px' }}>{senderMb.provider}</span>}
                             </td>
-                            <td style={{ color: 'var(--cyan-accent)', fontWeight: 700 }}>
+                            <td style={{ color: 'var(--cyan-glow)', fontWeight: 700 }}>
                               {msg.toEmail}
-                              {recipientMb && <span className={`badge-pill badge-${recipientMb.provider.toLowerCase()}`} style={{ marginLeft: '8px' }}>{recipientMb.provider}</span>}
+                              {recipientMb && <span className={`badge-holo badge-${recipientMb.provider.toLowerCase()}`} style={{ marginLeft: '8px' }}>{recipientMb.provider}</span>}
                             </td>
-                            <td style={{ color: 'var(--text-secondary)', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.subject}</td>
-                            <td><span className="badge-pill badge-active">{msg.status}</span></td>
+                            <td style={{ color: 'var(--text-muted)', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.subject}</td>
+                            <td><span className="badge-holo badge-active">{msg.status}</span></td>
                             <td>
-                              <button onClick={() => setSelectedMessage({ ...msg, senderMb, recipientMb })} style={{ background: 'rgba(129, 140, 248, 0.15)', color: 'var(--violet-accent)', border: '1px solid rgba(129, 140, 248, 0.3)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <button onClick={() => setSelectedMessage({ ...msg, senderMb, recipientMb })} style={{ background: 'rgba(129, 140, 248, 0.18)', color: 'var(--violet-glow)', border: '1px solid rgba(129, 140, 248, 0.4)', padding: '6px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <Eye size={13} />
                                 <span>Inspect</span>
                               </button>
@@ -903,15 +920,15 @@ export default function App() {
 
               {/* DOMAINS TAB */}
               {activeTab === 'domains' && (
-                <div className="table-luxury">
-                  <div className="table-luxury-header">
-                    <div style={{ fontSize: '16px', fontWeight: 800 }}>Domain Infrastructure Pool ({domains.length})</div>
-                    <button onClick={() => setShowAddDomainModal(true)} style={{ background: 'rgba(56, 189, 248, 0.15)', color: 'var(--cyan-accent)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="holo-table-card">
+                  <div className="holo-table-header">
+                    <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>Domain Infrastructure Pool ({domains.length})</div>
+                    <button onClick={() => setShowAddDomainModal(true)} style={{ background: 'rgba(56, 189, 248, 0.18)', color: 'var(--cyan-glow)', border: '1px solid rgba(56, 189, 248, 0.4)', padding: '10px 20px', borderRadius: '14px', cursor: 'pointer', fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Plus size={16} />
                       <span>Add New Domain</span>
                     </button>
                   </div>
-                  <table className="glass-table">
+                  <table className="holo-table">
                     <thead>
                       <tr>
                         <th>Domain Name</th>
@@ -926,14 +943,14 @@ export default function App() {
                     <tbody>
                       {domains.map(dom => (
                         <tr key={dom.id}>
-                          <td style={{ fontWeight: 800, fontSize: '15px' }}>{dom.domain || dom.name || 'Domain'}</td>
-                          <td><span className="badge-pill badge-active">{dom.status || 'ACTIVE'}</span></td>
-                          <td style={{ color: 'var(--emerald-accent)', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>v=spf1 include:zoho.com ~all</td>
-                          <td style={{ color: 'var(--emerald-accent)', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>zoho._domainkey (2048-bit)</td>
-                          <td style={{ color: 'var(--emerald-accent)', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>v=DMARC1; p=reject</td>
-                          <td style={{ color: 'var(--cyan-accent)', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>mx.zoho.com (10)</td>
+                          <td style={{ fontWeight: 900, fontSize: '15px', fontFamily: 'var(--font-heading)' }}>{dom.domain || dom.name || 'Domain'}</td>
+                          <td><span className="badge-holo badge-active">{dom.status || 'ACTIVE'}</span></td>
+                          <td style={{ color: 'var(--emerald-glow)', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>v=spf1 include:zoho.com ~all</td>
+                          <td style={{ color: 'var(--emerald-glow)', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>zoho._domainkey (2048-bit)</td>
+                          <td style={{ color: 'var(--emerald-glow)', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>v=DMARC1; p=reject</td>
+                          <td style={{ color: 'var(--cyan-glow)', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>mx.zoho.com (10)</td>
                           <td>
-                            <button onClick={() => setShowDnsModal(dom)} style={{ background: 'rgba(52, 211, 153, 0.15)', color: 'var(--emerald-accent)', border: '1px solid rgba(52, 211, 153, 0.3)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '11px', fontWeight: 800 }}>
+                            <button onClick={() => setShowDnsModal(dom)} style={{ background: 'rgba(52, 211, 153, 0.18)', color: 'var(--emerald-glow)', border: '1px solid rgba(52, 211, 153, 0.4)', padding: '6px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '11px', fontWeight: 800 }}>
                               RUN DIAGNOSTICS
                             </button>
                           </td>
@@ -946,14 +963,14 @@ export default function App() {
 
               {/* LOGS TAB */}
               {activeTab === 'logs' && (
-                <div className="table-luxury">
-                  <div className="table-luxury-header">
-                    <div style={{ fontSize: '16px', fontWeight: 800 }}>Real-Time System Audit Telemetry</div>
-                    <button onClick={fetchDashboardData} style={{ background: 'none', border: '1px solid var(--border-glass)', color: '#fff', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' }}>
+                <div className="holo-table-card">
+                  <div className="holo-table-header">
+                    <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>Real-Time System Audit Telemetry</div>
+                    <button onClick={fetchDashboardData} style={{ background: 'none', border: '1px solid var(--border-glass)', color: '#fff', padding: '6px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px' }}>
                       Refresh Logs
                     </button>
                   </div>
-                  <table className="glass-table">
+                  <table className="holo-table">
                     <thead>
                       <tr>
                         <th>Timestamp</th>
@@ -965,10 +982,10 @@ export default function App() {
                     <tbody>
                       {eventLogs.map(log => (
                         <tr key={log.id}>
-                          <td style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{new Date(log.createdAt).toLocaleTimeString()}</td>
-                          <td><span className={`badge-pill ${log.level === 'WARNING' ? 'badge-paused' : 'badge-active'}`}>{log.level}</span></td>
+                          <td style={{ fontSize: '12px', color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>{new Date(log.createdAt).toLocaleTimeString()}</td>
+                          <td><span className={`badge-holo ${log.level === 'WARNING' ? 'badge-paused' : 'badge-active'}`}>{log.level}</span></td>
                           <td style={{ fontWeight: 700 }}>{log.event}</td>
-                          <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{log.message}</td>
+                          <td style={{ color: 'var(--text-pure)', fontWeight: 500 }}>{log.message}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -982,25 +999,25 @@ export default function App() {
 
       {/* RAYCAST COMMAND PALETTE MODAL (⌘K) */}
       {showCmdK && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '120px', zIndex: 2000 }}>
-          <motion.div initial={{ opacity: 0, scale: 0.95, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -20 }} style={{ background: 'rgba(18, 20, 32, 0.95)', border: '1px solid var(--border-highlight)', borderRadius: '20px', width: '600px', boxShadow: 'var(--shadow-3d)', overflow: 'hidden' }}>
-            <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Search size={18} color="var(--violet-accent)" />
-              <input type="text" autoFocus placeholder="Type a command or search mailboxes..." style={{ background: 'none', border: 'none', color: '#fff', fontSize: '15px', width: '100%', outline: 'none' }} />
-              <span className="cmd-key">ESC</span>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '120px', zIndex: 2000 }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -20 }} style={{ background: 'rgba(14, 16, 28, 0.98)', border: '1px solid var(--border-bright)', borderRadius: '24px', width: '620px', boxShadow: 'var(--shadow-holo)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 26px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <Search size={20} color="var(--violet-glow)" />
+              <input type="text" autoFocus placeholder="Execute command or query AI core..." style={{ background: 'none', border: 'none', color: '#fff', fontSize: '16px', width: '100%', outline: 'none' }} />
+              <span style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 8px', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)' }}>ESC</span>
             </div>
-            <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '340px', overflowY: 'auto' }}>
-              <div onClick={() => { triggerManualWarmup(); setShowCmdK(false); }} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: 600 }}><Play size={16} color="var(--cyan-accent)" /> Simulate Warmup Exchange</div>
-                <ArrowUpRight size={14} color="var(--text-muted)" />
+            <div style={{ padding: '18px 26px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '360px', overflowY: 'auto' }}>
+              <div onClick={() => { triggerManualWarmup(); setShowCmdK(false); }} style={{ padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14.5px', fontWeight: 700 }}><Play size={18} color="var(--cyan-glow)" /> Simulate Warmup Exchange</div>
+                <ArrowUpRight size={16} color="var(--text-subtle)" />
               </div>
-              <div onClick={() => { setShowAddMailboxModal(true); setShowCmdK(false); }} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: 600 }}><Plus size={16} color="var(--emerald-accent)" /> Add New Warmup Mailbox</div>
-                <ArrowUpRight size={14} color="var(--text-muted)" />
+              <div onClick={() => { setShowAddMailboxModal(true); setShowCmdK(false); }} style={{ padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14.5px', fontWeight: 700 }}><Plus size={18} color="var(--emerald-glow)" /> Add New Warmup Mailbox</div>
+                <ArrowUpRight size={16} color="var(--text-subtle)" />
               </div>
-              <div onClick={() => { setActiveTab('domains'); setShowCmdK(false); }} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: 600 }}><Globe size={16} color="var(--violet-accent)" /> Inspect Domain Infrastructure</div>
-                <ArrowUpRight size={14} color="var(--text-muted)" />
+              <div onClick={() => { setActiveTab('domains'); setShowCmdK(false); }} style={{ padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14.5px', fontWeight: 700 }}><Globe size={18} color="var(--violet-glow)" /> Inspect Domain Infrastructure</div>
+                <ArrowUpRight size={16} color="var(--text-subtle)" />
               </div>
             </div>
           </motion.div>
@@ -1009,30 +1026,30 @@ export default function App() {
 
       {/* TECHNICAL DNS DIAGNOSTICS MODAL */}
       {showDnsModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>
-          <div style={{ background: 'rgba(18, 20, 32, 0.95)', border: '1px solid var(--border-highlight)', borderRadius: '24px', padding: '36px', width: '560px', boxShadow: 'var(--shadow-3d)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <ShieldCheck color="var(--emerald-accent)" size={22} />
-                <h2 style={{ fontSize: '20px', fontWeight: 800 }}>DNS Diagnostics: {showDnsModal.domain || showDnsModal.name}</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>
+          <div style={{ background: 'rgba(14, 16, 28, 0.98)', border: '1px solid var(--border-bright)', borderRadius: '28px', padding: '40px', width: '580px', boxShadow: 'var(--shadow-holo)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <ShieldCheck color="var(--emerald-glow)" size={24} />
+                <h2 style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'var(--font-heading)' }}>DNS Security Diagnostics: {showDnsModal.domain || showDnsModal.name}</h2>
               </div>
-              <X size={20} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowDnsModal(null)} />
+              <X size={22} style={{ cursor: 'pointer', color: 'var(--text-subtle)' }} onClick={() => setShowDnsModal(null)} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ background: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)', padding: '16px', borderRadius: '14px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--emerald-accent)', fontWeight: 800 }}>SPF RECORD DIAGNOSTIC (PASS)</div>
-                <div style={{ fontSize: '13.5px', color: '#fff', fontFamily: 'var(--font-mono)', marginTop: '6px' }}>v=spf1 include:zoho.com ~all</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <div style={{ background: 'rgba(52, 211, 153, 0.1)', border: '1px solid rgba(52, 211, 153, 0.3)', padding: '18px', borderRadius: '16px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--emerald-glow)', fontWeight: 800 }}>SPF RECORD DIAGNOSTIC (PASS)</div>
+                <div style={{ fontSize: '14px', color: '#fff', fontFamily: 'var(--font-mono)', marginTop: '6px' }}>v=spf1 include:zoho.com ~all</div>
               </div>
 
-              <div style={{ background: 'rgba(129, 140, 248, 0.08)', border: '1px solid rgba(129, 140, 248, 0.25)', padding: '16px', borderRadius: '14px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--violet-accent)', fontWeight: 800 }}>DKIM SIGNATURE DIAGNOSTIC (PASS)</div>
-                <div style={{ fontSize: '13.5px', color: '#fff', fontFamily: 'var(--font-mono)', marginTop: '6px' }}>Selector: zoho._domainkey • Key length: 2048-bit RSA</div>
+              <div style={{ background: 'rgba(129, 140, 248, 0.1)', border: '1px solid rgba(129, 140, 248, 0.3)', padding: '18px', borderRadius: '16px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--violet-glow)', fontWeight: 800 }}>DKIM SIGNATURE DIAGNOSTIC (PASS)</div>
+                <div style={{ fontSize: '14px', color: '#fff', fontFamily: 'var(--font-mono)', marginTop: '6px' }}>Selector: zoho._domainkey • Key length: 2048-bit RSA</div>
               </div>
 
-              <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '16px', borderRadius: '14px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--cyan-accent)', fontWeight: 800 }}>DMARC POLICY DIAGNOSTIC (PASS)</div>
-                <div style={{ fontSize: '13.5px', color: '#fff', fontFamily: 'var(--font-mono)', marginTop: '6px' }}>v=DMARC1; p=reject; rua=mailto:dmarc-reports@{showDnsModal.domain}</div>
+              <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '18px', borderRadius: '16px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--cyan-glow)', fontWeight: 800 }}>DMARC POLICY DIAGNOSTIC (PASS)</div>
+                <div style={{ fontSize: '14px', color: '#fff', fontFamily: 'var(--font-mono)', marginTop: '6px' }}>v=DMARC1; p=reject; rua=mailto:dmarc-reports@{showDnsModal.domain}</div>
               </div>
             </div>
           </div>
@@ -1041,42 +1058,42 @@ export default function App() {
 
       {/* INSPECT MESSAGE MODAL */}
       {selectedMessage && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-          <div style={{ background: 'rgba(18, 20, 32, 0.95)', border: '1px solid var(--border-highlight)', borderRadius: '24px', padding: '36px', width: '620px', boxShadow: 'var(--shadow-3d)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <MessageSquare color="var(--violet-accent)" size={22} />
-                <h2 style={{ fontSize: '20px', fontWeight: 800 }}>Warmup Message Inspector</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div style={{ background: 'rgba(14, 16, 28, 0.98)', border: '1px solid var(--border-bright)', borderRadius: '28px', padding: '40px', width: '640px', boxShadow: 'var(--shadow-holo)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <MessageSquare color="var(--violet-glow)" size={24} />
+                <h2 style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'var(--font-heading)' }}>Warmup Message Inspector</h2>
               </div>
-              <X size={20} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setSelectedMessage(null)} />
+              <X size={22} style={{ cursor: 'pointer', color: 'var(--text-subtle)' }} onClick={() => setSelectedMessage(null)} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '20px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '22px', marginBottom: '22px' }}>
               <div>
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 700 }}>Sender:</span>
-                <div style={{ color: '#fff', fontWeight: 700, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: 'var(--text-subtle)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 800 }}>Sender:</span>
+                <div style={{ color: '#fff', fontWeight: 800, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {selectedMessage.fromMailboxId ? mailboxes.find(m => m.id === selectedMessage.fromMailboxId)?.email || 'Warmup Sender' : 'Warmup Sender'}
-                  {selectedMessage.senderMb && <span className={`badge-pill badge-${selectedMessage.senderMb.provider.toLowerCase()}`}>{selectedMessage.senderMb.provider}</span>}
+                  {selectedMessage.senderMb && <span className={`badge-holo badge-${selectedMessage.senderMb.provider.toLowerCase()}`}>{selectedMessage.senderMb.provider}</span>}
                 </div>
               </div>
 
               <div>
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 700 }}>Recipient:</span>
-                <div style={{ color: 'var(--cyan-accent)', fontWeight: 700, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: 'var(--text-subtle)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 800 }}>Recipient:</span>
+                <div style={{ color: 'var(--cyan-glow)', fontWeight: 800, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {selectedMessage.toEmail}
-                  {selectedMessage.recipientMb && <span className={`badge-pill badge-${selectedMessage.recipientMb.provider.toLowerCase()}`}>{selectedMessage.recipientMb.provider}</span>}
+                  {selectedMessage.recipientMb && <span className={`badge-holo badge-${selectedMessage.recipientMb.provider.toLowerCase()}`}>{selectedMessage.recipientMb.provider}</span>}
                 </div>
               </div>
 
               <div>
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 700 }}>Subject:</span>
-                <div style={{ color: '#fff', fontWeight: 700, marginTop: '2px' }}>{selectedMessage.subject}</div>
+                <span style={{ color: 'var(--text-subtle)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 800 }}>Subject:</span>
+                <div style={{ color: '#fff', fontWeight: 800, marginTop: '4px' }}>{selectedMessage.subject}</div>
               </div>
             </div>
 
             <div>
-              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '8px' }}>Generated Email Body Text:</span>
-              <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '12px', padding: '18px', color: 'var(--text-primary)', fontSize: '13.5px', lineHeight: '1.6', whiteSpace: 'pre-wrap', maxHeight: '220px', overflowY: 'auto' }}>
+              <span style={{ color: 'var(--text-subtle)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '10px' }}>Generated Email Body Text:</span>
+              <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '20px', color: 'var(--text-pure)', fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-wrap', maxHeight: '220px', overflowY: 'auto' }}>
                 {selectedMessage.body}
               </div>
             </div>
@@ -1086,17 +1103,17 @@ export default function App() {
 
       {/* ADD MAILBOX MODAL */}
       {showAddMailboxModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'rgba(18, 20, 32, 0.95)', border: '1px solid var(--border-highlight)', borderRadius: '24px', padding: '36px', width: '540px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-3d)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Add New Warmup Mailbox</h2>
-              <X size={20} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowAddMailboxModal(false)} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'rgba(14, 16, 28, 0.98)', border: '1px solid var(--border-bright)', borderRadius: '28px', padding: '40px', width: '560px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-holo)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'var(--font-heading)' }}>Add New Warmup Mailbox</h2>
+              <X size={22} style={{ cursor: 'pointer', color: 'var(--text-subtle)' }} onClick={() => setShowAddMailboxModal(false)} />
             </div>
 
-            <form onSubmit={handleAddMailbox} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleAddMailbox} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', fontWeight: 600 }}>Provider Group</label>
-                <select value={newMailbox.provider} onChange={e => handleProviderChange(e.target.value)} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '10px', color: '#fff' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', display: 'block', fontWeight: 700 }}>Provider Group</label>
+                <select value={newMailbox.provider} onChange={e => handleProviderChange(e.target.value)} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '12px', color: '#fff' }}>
                   <option value="ZOHO">Zoho Mail</option>
                   <option value="GMAIL">Gmail / Google Workspace</option>
                   <option value="OUTLOOK">Microsoft Outlook</option>
@@ -1106,27 +1123,27 @@ export default function App() {
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', fontWeight: 600 }}>Email Address</label>
-                <input type="email" required placeholder="e.g. alex@yourdomain.com" value={newMailbox.email} onChange={e => setNewMailbox({ ...newMailbox, email: e.target.value })} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '10px', color: '#fff' }} />
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', display: 'block', fontWeight: 700 }}>Email Address</label>
+                <input type="email" required placeholder="e.g. alex@yourdomain.com" value={newMailbox.email} onChange={e => setNewMailbox({ ...newMailbox, email: e.target.value })} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '12px', color: '#fff' }} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', fontWeight: 600 }}>SMTP Host</label>
-                  <input type="text" required value={newMailbox.smtpHost} onChange={e => setNewMailbox({ ...newMailbox, smtpHost: e.target.value })} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '10px', color: '#fff' }} />
+                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', display: 'block', fontWeight: 700 }}>SMTP Host</label>
+                  <input type="text" required value={newMailbox.smtpHost} onChange={e => setNewMailbox({ ...newMailbox, smtpHost: e.target.value })} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '12px', color: '#fff' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', fontWeight: 600 }}>Port</label>
-                  <input type="number" required value={newMailbox.smtpPort} onChange={e => setNewMailbox({ ...newMailbox, smtpPort: e.target.value })} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '10px', color: '#fff' }} />
+                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', display: 'block', fontWeight: 700 }}>Port</label>
+                  <input type="number" required value={newMailbox.smtpPort} onChange={e => setNewMailbox({ ...newMailbox, smtpPort: e.target.value })} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '12px', color: '#fff' }} />
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', fontWeight: 600 }}>Password / App Password</label>
-                <input type="password" required placeholder="••••••••••••" value={newMailbox.smtpPassword} onChange={e => setNewMailbox({ ...newMailbox, smtpPassword: e.target.value, imapPassword: e.target.value })} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '10px', color: '#fff' }} />
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', display: 'block', fontWeight: 700 }}>Password / App Password</label>
+                <input type="password" required placeholder="••••••••••••" value={newMailbox.smtpPassword} onChange={e => setNewMailbox({ ...newMailbox, smtpPassword: e.target.value, imapPassword: e.target.value })} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '12px', color: '#fff' }} />
               </div>
 
-              <button type="submit" style={{ marginTop: '12px', background: 'linear-gradient(135deg, var(--violet-accent) 0%, var(--cyan-accent) 100%)', color: '#fff', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: '14px', boxShadow: '0 8px 25px rgba(129, 140, 248, 0.35)' }}>
+              <button type="submit" style={{ marginTop: '12px', background: 'linear-gradient(135deg, var(--violet-glow) 0%, var(--cyan-glow) 100%)', color: '#fff', padding: '14px', borderRadius: '14px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '14px', boxShadow: '0 0 30px rgba(129, 140, 248, 0.4)' }}>
                 Save Mailbox & Connect to Supabase
               </button>
             </form>
@@ -1136,20 +1153,20 @@ export default function App() {
 
       {/* ADD DOMAIN MODAL */}
       {showAddDomainModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'rgba(18, 20, 32, 0.95)', border: '1px solid var(--border-highlight)', borderRadius: '24px', padding: '36px', width: '440px', boxShadow: 'var(--shadow-3d)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 800 }}>Add New Domain</h2>
-              <X size={20} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowAddDomainModal(false)} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'rgba(14, 16, 28, 0.98)', border: '1px solid var(--border-bright)', borderRadius: '28px', padding: '40px', width: '460px', boxShadow: 'var(--shadow-holo)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'var(--font-heading)' }}>Add New Domain</h2>
+              <X size={22} style={{ cursor: 'pointer', color: 'var(--text-subtle)' }} onClick={() => setShowAddDomainModal(false)} />
             </div>
 
-            <form onSubmit={handleAddDomain} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleAddDomain} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', fontWeight: 600 }}>Domain Name</label>
-                <input type="text" required placeholder="e.g. mycompany.work" value={newDomainName} onChange={e => setNewDomainName(e.target.value)} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '10px', color: '#fff' }} />
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', display: 'block', fontWeight: 700 }}>Domain Name</label>
+                <input type="text" required placeholder="e.g. mycompany.work" value={newDomainName} onChange={e => setNewDomainName(e.target.value)} style={{ width: '100%', padding: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-glass)', borderRadius: '12px', color: '#fff' }} />
               </div>
 
-              <button type="submit" style={{ marginTop: '12px', background: 'var(--cyan-accent)', color: '#000', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: '14px' }}>
+              <button type="submit" style={{ marginTop: '12px', background: 'var(--cyan-glow)', color: '#000', padding: '14px', borderRadius: '14px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '14px' }}>
                 Add Domain to Infrastructure
               </button>
             </form>
