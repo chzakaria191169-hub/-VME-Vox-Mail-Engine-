@@ -556,18 +556,18 @@ export default function App() {
     }],
   };
 
-  // Marquee telemetry data — matches Voxora CRM exactly
+  // Marquee telemetry data — VME Mailbox Warmup Engine
   const tele = [
     { label: 'SMTP HEALTH', val: `${avgScore}%`, cls: 'green' },
-    { label: 'AI AGENTS', val: 'ONLINE', cls: 'green' },
-    { label: 'DAILY CAPACITY', val: `${(mailboxes.length * 20) + 2000} LEADS`, cls: 'cyan' },
-    { label: 'OUTBOUND ENGINE', val: 'OPTIMIZED', cls: 'green' },
-    { label: 'REPLY DETECTION', val: 'ACTIVE', cls: 'green' },
-    { label: 'INBOX WARMUP', val: `${avgScore}.2%`, cls: 'cyan' },
-    { label: 'B2B WORKFLOWS', val: '7 RUNNING', cls: 'purple' },
+    { label: 'WARMUP ENGINE', val: 'ACTIVE', cls: 'green' },
+    { label: 'DAILY LIMIT', val: `${mailboxes.reduce((a, m) => a + (m.warmupDailyLimit || 20), 0)} EMAILS`, cls: 'cyan' },
+    { label: 'REPLY DETECTION', val: 'ONLINE', cls: 'green' },
+    { label: 'INBOX WARMUP', val: `${avgScore}%`, cls: 'cyan' },
+    { label: 'WARMUP AGENTS', val: `${active} RUNNING`, cls: 'purple' },
     { label: 'SPAM SCORE', val: '0.02% (EXCELLENT)', cls: 'green' },
-    { label: 'DOMAINS ACTIVE', val: `${domains.length || 20}`, cls: 'cyan' },
-    { label: 'SEQUENCES QUEUED', val: '84', cls: 'purple' },
+    { label: 'DOMAINS ACTIVE', val: `${domains.length || 0}`, cls: 'cyan' },
+    { label: 'MAILBOXES', val: `${mailboxes.length} TOTAL`, cls: 'purple' },
+    { label: 'IMAP SYNC', val: 'CONNECTED', cls: 'green' },
   ];
 
   // Sidebar nav definition
@@ -611,8 +611,8 @@ export default function App() {
           <div className="sidebar-logo">
             <div className="logo-gem">V</div>
             <div>
-              <div className="logo-name">VOXORA</div>
-              <div className="logo-sub">Command Centre</div>
+              <div className="logo-name">VME</div>
+              <div className="logo-sub">Vox Mail Engine</div>
             </div>
           </div>
 
@@ -639,7 +639,7 @@ export default function App() {
             <div className="user-ava">V</div>
             <div>
               <div style={{ fontSize: '12px', fontWeight: 600 }}>Admin</div>
-              <div style={{ fontSize: '10.5px', color: 'var(--text-3)' }}>Voxora Agency</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-3)' }}>VME Workspace</div>
             </div>
           </div>
         </aside>
@@ -649,10 +649,10 @@ export default function App() {
           {/* HEADER */}
           <header className="top-header">
             <div className="header-left">
-              <span className="header-title">Command Center</span>
+              <span className="header-title">Warmup Command Center</span>
               <div className="campaign-pill">
                 <span className="campaign-dot" />
-                Campaign #8 · Commercial Glass & Glazing
+                {mailboxes.length} Mailboxes · {active} Active
                 <ChevronDown size={12} />
               </div>
             </div>
@@ -691,24 +691,24 @@ export default function App() {
                     <div className="hero-card">
                       <HeroCanvas />
                       <div className="hero-content">
-                        <div className="hero-eyebrow">— AI Automation Command Center —</div>
-                        <div className="hero-title">Your Pipeline, <span className="hl">Automated</span></div>
+                        <div className="hero-eyebrow">— Mailbox Warmup Engine —</div>
+                        <div className="hero-title">Your Inboxes, <span className="hl">Warmed Up</span></div>
                         <p className="hero-desc">
-                          Real-time intelligence. Every lead tracked, every follow-up automated, every<br />
-                          reply detected — all running silently in the background.
+                          Automated warmup at scale. Every mailbox connected, every send tracked, every <br />
+                          inbox score optimized — all running silently in the background.
                         </p>
                         <div className="hero-pills">
                           <div className="hero-pill">
-                            <span className="pill-dot" style={{ background: 'var(--accent-green)' }} />
-                            AGENTS ONLINE
+                            <span className="pill-dot" style={{ background: 'var(--emerald)' }} />
+                            WARMUP ACTIVE
                           </div>
                           <div className="hero-pill">
                             <span className="pill-dot" style={{ background: '#818CF8' }} />
-                            {mailboxes.length} INBOXES ACTIVE
+                            {mailboxes.length} INBOXES CONNECTED
                           </div>
                           <div className="hero-pill">
-                            <span className="pill-dot" style={{ background: 'var(--accent-cyan)' }} />
-                            OUTBOUND LIVE
+                            <span className="pill-dot" style={{ background: 'var(--cyan)' }} />
+                            SMTP ENGINE LIVE
                           </div>
                         </div>
                       </div>
