@@ -5,7 +5,7 @@ import {
   Mail, Zap, RefreshCw, Search, Globe, Plus, Trash2, Play, X,
   Eye, MessageSquare, Command, ArrowUpRight, ShieldCheck, Bell,
   LayoutDashboard, Inbox, Settings, TrendingUp, Bot, ChevronDown,
-  Filter, Radio, BarChart2, Funnel
+  Filter, Radio, BarChart2
 } from 'lucide-react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import {
