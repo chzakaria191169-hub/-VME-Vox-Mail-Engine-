@@ -1,0 +1,31 @@
+```json
+{
+  "status": "APPROVED",
+  "phase": 4,
+  "recommendations": [
+    "Rec 1: Use IMAP UIDVALIDITY in composite key to handle UID re-indexing on server resets",
+    "Rec 2: Execute IMAP MOVE atomically using UID MOVE command with UID COPY+STORE fallback",
+    "Rec 3: Decouple AIReplyProvider behind abstract strategy pattern",
+    "Rec 4: Deriving metrics strictly from EventLog streams prevents counter drift"
+  ],
+  "folderMapping": {
+    "gmail": {
+      "SPAM": "[Gmail]/Spam",
+      "SENT": "[Gmail]/Sent Mail",
+      "TRASH": "[Gmail]/Trash"
+    },
+    "outlook": {
+      "SPAM": "Junk Email",
+      "SENT": "Sent Items",
+      "TRASH": "Deleted Items"
+    },
+    "custom": {
+      "SPAM": ["Spam", "Junk"],
+      "SENT": ["Sent", "Sent Items"],
+      "TRASH": ["Trash", "Deleted"]
+    }
+  },
+  "deduplicationStrategy": "Message-ID primary; SHA256(mailboxId + folder + UIDVALIDITY + UID) fallback",
+  "spamRescueCriteria": "Matches VME Message-ID or In-Reply-To in active DB conversations"
+}
+```

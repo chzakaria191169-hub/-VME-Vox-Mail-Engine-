@@ -1,0 +1,50 @@
+```json
+{
+  "status": "APPROVED",
+  "phase": 3,
+  "deepseekRecommendations": [
+    "Implement distributed lock (e.g., Redis) for job creation idempotency using mailbox_id + timestamp + action_key composite key",
+    "Use transactional event sourcing: append EventLog before applying state changes",
+    "Separate retryable/non-retryable errors via error code classification at API boundary",
+    "Implement hierarchical throttling: global > workspace > domain > mailbox bucket tokens"
+  ],
+  "jobStateTransitions": {
+    "PENDING": ["RUNNING", "CANCELLED"],
+    "RUNNING": ["SUCCESS", "RETRYING", "FAILED", "DEAD"],
+    "RETRYING": ["RUNNING", "DEAD"],
+    "SUCCESS": [],
+    "FAILED": ["RETRYING", "DEAD"],
+    "DEAD": [],
+    "CANCELLED": []
+  },
+  "retryPolicy": {
+    "maxAttempts": 3,
+    "backoffStrategy": "EXPONENTIAL_JITTER",
+    "initialIntervalSec": 10,
+    "maxIntervalSec": 300,
+    "nonRetryableErrors": ["AUTHENTICATION_FAILED", "INVALID_CREDENTIALS", "MAILBOX_DISABLED", "DAILY_LIMIT_EXCEEDED"]
+  },
+  "concurrencyPolicy": {
+    "globalLimit": 50,
+    "perWorkspaceLimit": 10,
+    "perDomainLimit": 5,
+    "perMailboxLimit": 1,
+    "dynamicThrottling": "Adaptive token bucket based on SMTP provider health"
+  },
+  "shiftPolicyArchitecture": "Decoupled ShiftPolicy interface evaluation before job scheduling",
+  "failureMatrix": {
+    "smtpTimeout": "Retry with exponential backoff if attempts < 3, else DEAD",
+    "authFailure": "Immediate non-retryable failure, pause mailbox, emit MAILBOX_ERROR",
+    "processCrash": "Orphan job detection scanner resets RUNNING jobs > 5 mins to RETRYING",
+    "messageSentUnlogged": "Message-ID header deduplication prevents re-sending upon retry",
+    "orphanedJobs": "Heartbeat-based cleanup with 3x poll interval timeout"
+  },
+  "eligibilityCriteria": {
+    "status": ["ACTIVE"],
+    "health": ["HEALTHY", "WARNING"],
+    "cooldownPeriodSec": 900,
+    "dailyLimitThreshold": 0.9,
+    "providerStatus": ["OPERATIONAL", "DEGRADED"]
+  }
+}
+```
